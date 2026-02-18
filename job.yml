@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: config-templater
+  # Next annotations are required if the job managed by Argo CD,
+  # so Argo CD can relaunch the job on every app sync action
+  annotations: 
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: immich-config-template
+          image: ghcr.io/theredcyclops/immich-templater:latest
+          env:
+            - name: CONFIG_BASE
+              value: "immich-base-config"
+            - name: SMTP_CREDENTIALS_SECRET
+              value: "immich-smtp-creds"
+            - name: OIDC_CREDENTIALS_SECRET
+              value: "immich-oidc-credentials"
