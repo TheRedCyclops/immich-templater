@@ -3,15 +3,17 @@ import json
 import os
 from kubernetes import client, config, utils
 
-# Initialize Kubernetes API
+# Get Namespace for Namespace awareness
+with open('/var/run/secrets/kubernetes.io/serviceaccount/namespace', r) as namespace:
+    namespace = namespace 
 
 # Open ConfigMap
-with open('base_config.json') as base_config:
+with open('base_config.json', r) as base_config:
     base_decoded = json.load(base_config)
 
 # Open Secret(s)
 def load_secrets():
-    secret = api.read_namespaced_secret(name="immich-oidc-creds", namespace="immich")
+    secret = api.read_namespaced_secret(name="immich-oidc-creds", namespace=namespace)
 # Insert Values
 def template(base, secrets):
     # SMTP
@@ -31,10 +33,10 @@ def create_secret(string_data):
         kind = "Secret",
         metadata = client.V1ObjectMeta(
             name = "immich-config",
-            namespace = "immich",
+            namespace = namespace,
         )
     )
-    api.create_namespaced_secret(namespace=immich, body=body)
+    api.create_namespaced_secret(namespace=namespace, body=body)
 def main():
     config.load_incluster_config()
     api = client.CoreV1Api()
