@@ -13,9 +13,12 @@ except:
     namespace = "immich"
     print("Failed to get namespace, using default %s" namespace)
 # Open ConfigMap
-with open('base_config.json', r) as base_config:
-    base_decoded = json.load(base_config)
-
+def load_config_map(name):
+    try:
+        config_map_data = api.read_namespaced_config_map(name=name, namespace=namespace).data
+    except ApiException as e:
+        print("Error getting configMap %s: %s" % (name, e))
+    return config_map_data
 # Open Secret(s)
 def load_secret(name):
     try:
@@ -53,7 +56,7 @@ def create_secret(string_data):
 def main():
     config.load_incluster_config()
     api = client.CoreV1Api()
-    base = load_configmap(configMap)
+    base = load_config_map(os.environ['CONFIG_BASE'])
     smtp_secret = load_secret(os.environ['SMTP_CREDENTIALS_SECRET'])
     oidc_secret = load_secret(os.environ['OIDC_CREDENTIALS_SECRET'])
     filled_config = json.dump(template(base=base, smtp_secret=smtp_secret, oidc_secret=oidc_secret))
