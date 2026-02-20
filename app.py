@@ -25,7 +25,7 @@ def load_secret(name):
     return decoded_data
 
 # Insert Values
-def template(base, secrets):
+def template(base, smtp_secret, oidc_secret):
     # SMTP
     base['notifications']['smtp']['from'] = "Immich <{}>".format(smtp_secret['username'])
     base['notifications']['smtp']['transport']['username'] = smtp_secret['username']
@@ -53,5 +53,5 @@ def main():
     base = load_configmap(configMap)
     smtp_secret = load_secret(os.environ['SMTP_CREDENTIALS_SECRET'])
     oidc_secret = load_secret(os.environ['OIDC_CREDENTIALS_SECRET'])
-    filled_config = json.dump(template(base=base, secrets=secrets))
+    filled_config = json.dump(template(base=base, smtp_secret=smtp_secret, oidc_secret=oidc_secret))
     create_secret(string_data={'config.json': filled_config})
