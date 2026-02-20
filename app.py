@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import json
 import os
+import base64
+from kubernetes.client.rest import ApiException
 from kubernetes import client, config, utils
 
 # Get Namespace for Namespace awareness
@@ -12,18 +14,26 @@ with open('base_config.json', r) as base_config:
     base_decoded = json.load(base_config)
 
 # Open Secret(s)
-def load_secrets():
-    secret = api.read_namespaced_secret(name="immich-oidc-creds", namespace=namespace)
+def load_secret(name):
+    try:
+        secret_data = api.read_namespaced_secret(name=name, namespace=namespace).body.data()
+    except ApiException as e:
+        print("Error getting secret %s: %s" % (name, e))
+    decoded_data = {}
+    for entry in secret_data:
+        decoded_data[entry] = base64.b64decode(secret_data[entry])
+    return decoded_data
+
 # Insert Values
 def template(base, secrets):
     # SMTP
-    base['notifications']['smtp']['from'] = "Immich <smtp_username>"
-    base['notifications']['smtp']['transport']['username'] = "smtp_username"
-    base['notifications']['smtp']['transport']['password'] = "smtp_password"
+    base['notifications']['smtp']['from'] = "Immich <{}>".format(smtp_secret['username'])
+    base['notifications']['smtp']['transport']['username'] = smtp_secret['username']
+    base['notifications']['smtp']['transport']['password'] = smtp_secret['password']
     
     # OIDC
-    base['oauth']['clientId'] = "client_id"
-    base['oauth']['clientSecret'] = "client_secret"
+    base['oauth']['clientId'] = oidc_secret["client_id"]
+    base['oauth']['clientSecret'] = oidc_secret["client_secret"]
     return base
 
 def create_secret(string_data):
@@ -41,6 +51,7 @@ def main():
     config.load_incluster_config()
     api = client.CoreV1Api()
     base = load_configmap(configMap)
-    secrets = load_secrets('smtp_secret', 'oidc_secrets')
+    smtp_secret = load_secret(os.environ['SMTP_CREDENTIALS_SECRET'])
+    oidc_secret = load_secret(os.environ['OIDC_CREDENTIALS_SECRET'])
     filled_config = json.dump(template(base=base, secrets=secrets))
     create_secret(string_data={'config.json': filled_config})
