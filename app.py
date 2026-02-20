@@ -6,9 +6,12 @@ from kubernetes.client.rest import ApiException
 from kubernetes import client, config, utils
 
 # Get Namespace for Namespace awareness
-with open('/var/run/secrets/kubernetes.io/serviceaccount/namespace', r) as namespace:
-    namespace = namespace 
-
+try:
+    with open('/var/run/secrets/kubernetes.io/serviceaccount/namespace', r) as namespace:
+        namespace = namespace 
+except:
+    namespace = "immich"
+    print("Failed to get namespace, using default %s" namespace)
 # Open ConfigMap
 with open('base_config.json', r) as base_config:
     base_decoded = json.load(base_config)
