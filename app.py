@@ -37,13 +37,13 @@ def load_secret(name):
 # Insert Values
 def template(base, smtp_secret, oidc_secret):
     # SMTP
-    base['notifications']['smtp']['from'] = "Immich <{}>".format(smtp_secret['username'])
-    base['notifications']['smtp']['transport']['username'] = str(smtp_secret['username'])
-    base['notifications']['smtp']['transport']['password'] = str(smtp_secret['password'])
+    base['notifications']['smtp']['from'] = "Immich <{}>".format(str(smtp_secret['username']).decode("utf-8"))
+    base['notifications']['smtp']['transport']['username'] = str(smtp_secret['username']).decode("utf-8")
+    base['notifications']['smtp']['transport']['password'] = str(smtp_secret['password']).decode("utf-8")
     
     # OIDC
-    base['oauth']['clientId'] = str(oidc_secret["client_id"])
-    base['oauth']['clientSecret'] = str(oidc_secret["client_secret"])
+    base['oauth']['clientId'] = str(oidc_secret["client_id"]).decode("utf-8")
+    base['oauth']['clientSecret'] = str(oidc_secret["client_secret"]).decode("utf-8")
     return base
 
 def create_secret(string_data):
