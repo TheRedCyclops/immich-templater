@@ -52,7 +52,7 @@ def create_secret(string_data):
         string_data = string_data,
         kind = "Secret",
         metadata = client.V1ObjectMeta(
-            name = "immich-config",
+            name = "immich-immich-config",
             namespace = namespace,
         )
     )
@@ -61,14 +61,17 @@ def create_secret(string_data):
     except ApiException as e:
         print("Error creating secret: %s" % e)
 
-config.load_cluster_config()
+config.load_incluster_config()
 api = client.CoreV1Api()
 namespace = get_namespace()
 def main():
+    print("Loading base config")
     base = load_config_map(os.environ['CONFIG_BASE'])
+    print("Loading secrets")
     smtp_secret = load_secret(os.environ['SMTP_CREDENTIALS_SECRET'])
     oidc_secret = load_secret(os.environ['OIDC_CREDENTIALS_SECRET'])
     filled_config = json.dumps(template(base=base, smtp_secret=smtp_secret, oidc_secret=oidc_secret))
+    print("Creating secret")
     create_secret(string_data={'config.json': filled_config})
 
 if __name__ == '__main__':
