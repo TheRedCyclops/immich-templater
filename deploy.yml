@@ -42,11 +42,11 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: immich-config-template
-          image: ghcr.io/theredcyclops/immich-templater:latest
+          image: ghcr.io/theredcyclops/immich-templater:release
           env:
             - name: CONFIG_BASE
               value: "immich-base-config"
             - name: SMTP_CREDENTIALS_SECRET
               value: "smtp-credentials"
-            - name: OIDC_CREDENTIALS_SECRET
+            - name: OIDC_CREDENTIALS_SECRET-
               value: "immich-oidc-credentials"
