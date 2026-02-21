@@ -39,6 +39,7 @@ metadata:
 spec:
   template:
     spec:
+      serviceAccountName: immich-templater-account
       restartPolicy: OnFailure
       imagePullPolicy: Always
       containers:
@@ -49,5 +50,5 @@ spec:
               value: "immich-base-config"
             - name: SMTP_CREDENTIALS_SECRET
               value: "smtp-credentials"
-            - name: OIDC_CREDENTIALS_SECRET-
+            - name: OIDC_CREDENTIALS_SECRET
               value: "immich-oidc-credentials"
