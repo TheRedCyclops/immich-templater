@@ -52,7 +52,7 @@ def create_secret(string_data):
         string_data = string_data,
         kind = "Secret",
         metadata = client.V1ObjectMeta(
-            name = "immich-config",
+            name = "immich-immich-config",
             namespace = namespace,
         )
     )
