@@ -52,7 +52,10 @@ def create_secret(string_data):
             namespace = namespace,
         )
     )
-    api.create_namespaced_secret(namespace=namespace, body=body)
+    try:
+        api.create_namespaced_secret(namespace=namespace, body=body)
+    except ApiException as e:
+        print("Error creating secret: %s" % e)
 def main():
     config.load_incluster_config()
     api = client.CoreV1Api()
