@@ -40,6 +40,7 @@ spec:
   template:
     spec:
       restartPolicy: OnFailure
+      imagePullPolicy: Always
       containers:
         - name: immich-config-template
           image: ghcr.io/theredcyclops/immich-templater:release
