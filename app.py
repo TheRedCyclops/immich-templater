@@ -3,6 +3,7 @@ import json
 import os
 import base64
 from kubernetes.client.rest import ApiException
+import kubernetes.client
 from kubernetes import client, config, utils
 
 # Get Namespace for Namespace awareness
@@ -17,14 +18,15 @@ def get_namespace():
 # Open ConfigMap
 def load_config_map(name):
     try:
-        config_map_data = api.read_namespaced_config_map(name=name, namespace=namespace).data
+        config_map_json = api.read_namespaced_config_map(name=name, namespace=namespace).data['config.json']
+        config_map_data = json.loads(config_map_json)
     except ApiException as e:
         print("Error getting configMap %s: %s" % (name, e))
     return config_map_data
 # Open Secret(s)
 def load_secret(name):
     try:
-        secret_data = api.read_namespaced_secret(name=name, namespace=namespace).body.data()
+        secret_data = api.read_namespaced_secret(name=name, namespace=namespace).data
     except ApiException as e:
         print("Error getting secret %s: %s" % (name, e))
     decoded_data = {}
@@ -36,15 +38,15 @@ def load_secret(name):
 def template(base, smtp_secret, oidc_secret):
     # SMTP
     base['notifications']['smtp']['from'] = "Immich <{}>".format(smtp_secret['username'])
-    base['notifications']['smtp']['transport']['username'] = smtp_secret['username']
-    base['notifications']['smtp']['transport']['password'] = smtp_secret['password']
+    base['notifications']['smtp']['transport']['username'] = str(smtp_secret['username'])
+    base['notifications']['smtp']['transport']['password'] = str(smtp_secret['password'])
     
     # OIDC
-    base['oauth']['clientId'] = oidc_secret["client_id"]
-    base['oauth']['clientSecret'] = oidc_secret["client_secret"]
+    base['oauth']['clientId'] = str(oidc_secret["client_id"])
+    base['oauth']['clientSecret'] = str(oidc_secret["client_secret"])
     return base
 
-def create_secret(string_data, namespace):
+def create_secret(string_data):
     body = client.V1Secret(
         api_version = "v1",
         string_data = string_data,
@@ -58,15 +60,16 @@ def create_secret(string_data, namespace):
         api.create_namespaced_secret(namespace=namespace, body=body)
     except ApiException as e:
         print("Error creating secret: %s" % e)
+
+config.load_cluster_config()
+api = client.CoreV1Api()
+namespace = get_namespace()
 def main():
-    config.load_incluster_config()
-    api = client.CoreV1Api()
-    namespace = get_namespace()
     base = load_config_map(os.environ['CONFIG_BASE'])
     smtp_secret = load_secret(os.environ['SMTP_CREDENTIALS_SECRET'])
     oidc_secret = load_secret(os.environ['OIDC_CREDENTIALS_SECRET'])
-    filled_config = json.dump(template(base=base, smtp_secret=smtp_secret, oidc_secret=oidc_secret))
-    create_secret(string_data={'config.json': filled_config}, namespace=namespace)
+    filled_config = json.dumps(template(base=base, smtp_secret=smtp_secret, oidc_secret=oidc_secret))
+    create_secret(string_data={'config.json': filled_config})
 
 if __name__ == '__main__':
   main()
