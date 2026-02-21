@@ -6,12 +6,14 @@ from kubernetes.client.rest import ApiException
 from kubernetes import client, config, utils
 
 # Get Namespace for Namespace awareness
-try:
-    with open('/var/run/secrets/kubernetes.io/serviceaccount/namespace', r) as namespace:
-        namespace = namespace 
-except:
-    namespace = "immich"
-    print("Failed to get namespace, using default %s" % namespace)
+def get_namespace():
+    try:
+        with open('/var/run/secrets/kubernetes.io/serviceaccount/namespace', r) as namespace:
+            namespace = namespace 
+    except:
+        namespace = "immich"
+        print("Failed to get namespace, using default %s" % namespace)
+    return namespace
 # Open ConfigMap
 def load_config_map(name):
     try:
@@ -42,7 +44,7 @@ def template(base, smtp_secret, oidc_secret):
     base['oauth']['clientSecret'] = oidc_secret["client_secret"]
     return base
 
-def create_secret(string_data):
+def create_secret(string_data, namespace):
     body = client.V1Secret(
         api_version = "v1",
         string_data = string_data,
@@ -59,8 +61,12 @@ def create_secret(string_data):
 def main():
     config.load_incluster_config()
     api = client.CoreV1Api()
+    namespace = get_namespace()
     base = load_config_map(os.environ['CONFIG_BASE'])
     smtp_secret = load_secret(os.environ['SMTP_CREDENTIALS_SECRET'])
     oidc_secret = load_secret(os.environ['OIDC_CREDENTIALS_SECRET'])
     filled_config = json.dump(template(base=base, smtp_secret=smtp_secret, oidc_secret=oidc_secret))
-    create_secret(string_data={'config.json': filled_config})
+    create_secret(string_data={'config.json': filled_config}, namespace=namespace)
+
+if __name__ == '__main__':
+  main()
