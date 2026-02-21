@@ -11,7 +11,7 @@ try:
         namespace = namespace 
 except:
     namespace = "immich"
-    print("Failed to get namespace, using default %s" namespace)
+    print("Failed to get namespace, using default %s" % namespace)
 # Open ConfigMap
 def load_config_map(name):
     try:
