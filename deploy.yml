@@ -44,7 +44,7 @@ spec:
       imagePullPolicy: Always
       containers:
         - name: immich-config-template
-          image: ghcr.io/theredcyclops/immich-templater:release
+          image: ghcr.io/theredcyclops/immich-templater:main
           env:
             - name: CONFIG_BASE
               value: "immich-base-config"
