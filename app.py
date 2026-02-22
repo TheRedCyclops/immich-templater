@@ -2,8 +2,6 @@
 import json
 import os
 import base64
-from kubernetes.client.rest import ApiException
-import kubernetes.client
 from kubernetes import client, config, utils
 
 # Get Namespace for Namespace awareness
