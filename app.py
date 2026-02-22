@@ -37,13 +37,13 @@ def load_secret(name):
 # Insert Values
 def template(base, smtp_secret, oidc_secret):
     # SMTP
-    base['notifications']['smtp']['from'] = "Immich <{}>".format(str(smtp_secret['username']).decode("utf-8"))
-    base['notifications']['smtp']['transport']['username'] = str(smtp_secret['username']).decode("utf-8")
-    base['notifications']['smtp']['transport']['password'] = str(smtp_secret['password']).decode("utf-8")
+    base['notifications']['smtp']['from'] = "Immich <{}>".format(str(smtp_secret['username'], 'utf-8'))
+    base['notifications']['smtp']['transport']['username'] = str(smtp_secret['username'], 'utf-8')
+    base['notifications']['smtp']['transport']['password'] = str(smtp_secret['password'], 'utf-8')
     
     # OIDC
-    base['oauth']['clientId'] = str(oidc_secret["client_id"]).decode("utf-8")
-    base['oauth']['clientSecret'] = str(oidc_secret["client_secret"]).decode("utf-8")
+    base['oauth']['clientId'] = str(oidc_secret["client_id"], 'utf-8')
+    base['oauth']['clientSecret'] = str(oidc_secret["client_secret"], 'utf-8')
     return base
 
 def create_secret(string_data):
@@ -59,7 +59,11 @@ def create_secret(string_data):
     try:
         api.create_namespaced_secret(namespace=namespace, body=body)
     except ApiException as e:
-        print("Error creating secret: %s" % e)
+        if e.status == 409:
+            api.replace_namespaced_secret(namespace=namespace, body=body, name="immich-immich-config")
+        else:
+            print(type(e.status))
+            print("Error creating secret: %s" % e)
 
 config.load_incluster_config()
 api = client.CoreV1Api()
