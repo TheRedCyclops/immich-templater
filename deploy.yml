@@ -41,9 +41,9 @@ spec:
     spec:
       serviceAccountName: immich-templater-account
       restartPolicy: OnFailure
-      imagePullPolicy: Always
       containers:
         - name: immich-config-template
+          imagePullPolicy: Always
           image: ghcr.io/theredcyclops/immich-templater:main
           env:
             - name: CONFIG_BASE
