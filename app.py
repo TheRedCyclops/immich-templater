@@ -3,6 +3,7 @@ import json
 import os
 import base64
 from kubernetes import client, config, utils
+from kubernetes.client.rest import ApiException
 
 # Get Namespace for Namespace awareness
 def get_namespace():
